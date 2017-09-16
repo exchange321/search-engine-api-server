@@ -36,11 +36,11 @@ module.exports = function (options = {}) {
           },
         },
       },
-    }).then(({ took, hits }) => {
+    }).then(({ took, aggregations: { suggestions: { buckets } } }) => {
       res.setHeader('Content-Type', 'application/json');
       res.send(JSON.stringify({
         took,
-        hits,
+        buckets,
       }));
     }).catch((err) => {
       next(new errors.GeneralError(err.message, err))
