@@ -1,6 +1,6 @@
-const searchRecord = require('./search-record');
+const searchDocument = require('./search-document');
 const search = require('./search');
-const searchAutocomplete = require('./search-autocomplete');
+const searchAutocompletion = require('./search-autocompletion');
 module.exports = function () {
   // Add your custom middleware here. Remember, that
   // in Express the order matters
@@ -8,7 +8,7 @@ module.exports = function () {
 
   const esConfig = app.get('esConfig');
 
-  app.get('/api/search/record', searchRecord(esConfig));
-  app.get('/api/search/autocomplete', searchAutocomplete(esConfig));
+  app.get('/api/search/document', searchDocument(esConfig));
+  app.get('/api/search/autocompletion', searchAutocompletion(esConfig));
   app.get('/api/search', search(esConfig));
 };

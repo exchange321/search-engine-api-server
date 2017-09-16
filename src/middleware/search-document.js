@@ -3,7 +3,7 @@ const errors = require('feathers-errors');
 const url = require('url');
 
 module.exports = function (options = {}) {
-  return function searchRecord(req, res, next) {
+  return function searchDocument(req, res, next) {
     const { host, port, apiVersion, index, type } = options;
 
     const client = new elasticsearch.Client({

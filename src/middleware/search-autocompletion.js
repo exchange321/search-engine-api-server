@@ -3,7 +3,7 @@ const errors = require('feathers-errors');
 const url = require('url');
 
 module.exports = function (options = {}) {
-  return function searchAutocomplete(req, res, next) {
+  return function searchAutocompletion(req, res, next) {
     const { host, port, apiVersion, index, type } = options;
 
     const client = new elasticsearch.Client({
@@ -11,19 +11,10 @@ module.exports = function (options = {}) {
       apiVersion
     });
 
-    let { q, s } = url.parse(req.url, true).query;
+    let { q } = url.parse(req.url, true).query;
 
     if (q === undefined) {
       next(new errors.BadRequest('Query is empty'));
-    }
-
-    let size = 5;
-
-    if (s !== undefined) {
-      s = parseInt(s);
-      if (s > 0 && s <= 10) {
-        size = s;
-      }
     }
 
     client.search({
@@ -40,7 +31,7 @@ module.exports = function (options = {}) {
           suggestions: {
             terms: {
               field: 'autocompletion.raw',
-              size,
+              size: 5,
             },
           },
         },
