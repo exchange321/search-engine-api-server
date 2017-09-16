@@ -36,60 +36,60 @@ module.exports = function (options = {}) {
       }).catch((err) => {
         next(new errors.GeneralError(err.message, err))
       });
-    }
-
-    if (q === undefined) {
-      next(new errors.BadRequest('Query is empty'));
-    }
-
-    if (e !== undefined) {
-      e = e.split(',');
     } else {
-      e = [];
-    }
-
-    let from = 0;
-    let size = 1;
-
-    if (p !== undefined) {
-      p = parseInt(p);
-      if (p > 0) {
-        size = 10;
-        from = (p - 1) * size;
+      if (q === undefined) {
+        next(new errors.BadRequest('Query is empty'));
       }
-    }
 
-    client.search({
-      index,
-      type,
-      body: {
-        from,
-        size,
-        _source: ['title', 'description', 'url', 'image'],
-        query: {
-          bool: {
-            must: {
-              multi_match: {
-                query: q,
-                fields: ['title', 'body'],
+      if (e !== undefined) {
+        e = e.split(',');
+      } else {
+        e = [];
+      }
+
+      let from = 0;
+      let size = 1;
+
+      if (p !== undefined) {
+        p = parseInt(p);
+        if (p > 0) {
+          size = 10;
+          from = (p - 1) * size;
+        }
+      }
+
+      client.search({
+        index,
+        type,
+        body: {
+          from,
+          size,
+          _source: ['title', 'description', 'url', 'image'],
+          query: {
+            bool: {
+              must: {
+                multi_match: {
+                  query: q,
+                  fields: ['title', 'body'],
+                },
               },
-            },
-            must_not: {
-              terms: {
-                _id: e,
+              must_not: {
+                terms: {
+                  _id: e,
+                },
               },
             },
           },
         },
-      },
-    }).then(({ took, hits }) => {
-      res.setHeader('Content-Type', 'application/json');
-      res.send(JSON.stringify({
-        took,
-        hits,
-      }));
-    }).catch((err) => {
-      next(new errors.GeneralError(err.message, err))
-    });
+      }).then(({ took, hits }) => {
+        res.setHeader('Content-Type', 'application/json');
+        res.send(JSON.stringify({
+          took,
+          hits,
+        }));
+      }).catch((err) => {
+        next(new errors.GeneralError(err.message, err))
+      });
+    }
   };
 };
