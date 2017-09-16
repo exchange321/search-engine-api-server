@@ -27,6 +27,14 @@ module.exports = function (options = {}) {
             },
           },
         },
+      }).then(({ took, hits }) => {
+        res.setHeader('Content-Type', 'application/json');
+        res.send(JSON.stringify({
+          took,
+          hits,
+        }));
+      }).catch((err) => {
+        next(new errors.GeneralError(err.message, err))
       });
     }
 
