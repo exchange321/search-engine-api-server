@@ -105,30 +105,7 @@ module.exports = function (options = {}) {
         }
       }
 
-      client.search({
-        index,
-        type,
-        body: {
-          from,
-          size,
-          _source: ['title', 'description', 'url', 'image'],
-          query: {
-            bool: {
-              must: {
-                multi_match: {
-                  query: q,
-                  fields: ['title', 'body'],
-                },
-              },
-              must_not: {
-                terms: {
-                  _id: e,
-                },
-              },
-            },
-          },
-        },
-      }).then(({ took, hits }) => {
+      client.search(query).then(({ took, hits }) => {
         res.setHeader('Content-Type', 'application/json');
         res.send(JSON.stringify({
           took,

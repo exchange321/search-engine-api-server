@@ -52,26 +52,7 @@ module.exports = function (options = {}) {
       }
     }
 
-    client.search({
-      index,
-      type,
-      body: {
-        size: 0,
-        query: {
-          term: {
-            'autocompletion.completion': q,
-          },
-        },
-        aggs: {
-          suggestions: {
-            terms: {
-              field: 'autocompletion.raw',
-              size: 5,
-            },
-          },
-        },
-      },
-    }).then(({ took, aggregations: { suggestions: { buckets } } }) => {
+    client.search(query).then(({ took, aggregations: { suggestions: { buckets } } }) => {
       res.setHeader('Content-Type', 'application/json');
       res.send(JSON.stringify({
         took,
