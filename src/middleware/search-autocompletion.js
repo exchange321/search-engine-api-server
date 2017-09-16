@@ -11,10 +11,45 @@ module.exports = function (options = {}) {
       apiVersion
     });
 
-    let { q } = url.parse(req.url, true).query;
+    let { q, i } = url.parse(req.url, true).query;
+
+    i = i !== 'false';
 
     if (q === undefined) {
       next(new errors.BadRequest('Query is empty'));
+    }
+
+    const query = {
+      index,
+      type,
+      body: {
+        size: 0,
+        query: {
+          bool: {
+            must: {
+              term: {
+                'autocompletion.completion': q,
+              },
+            },
+          },
+        },
+        aggs: {
+          suggestions: {
+            terms: {
+              field: 'autocompletion.raw',
+              size: 5,
+            },
+          },
+        },
+      },
+    };
+
+    if (i) {
+      query.body.query.bool.filter = {
+        term: {
+          'info.iframe': true,
+        },
+      }
     }
 
     client.search({

@@ -11,10 +11,11 @@ module.exports = function (options = {}) {
       apiVersion
     });
 
-    let { q, p, e, id } = url.parse(req.url, true).query;
+    let { q, p, e, id, i } = url.parse(req.url, true).query;
 
+    i = i !== 'false';
     if (id !== undefined) {
-      client.search({
+      const query = {
         index,
         type,
         body: {
@@ -22,12 +23,25 @@ module.exports = function (options = {}) {
           size: 1,
           _source: ['title', 'description', 'url', 'image'],
           query: {
-            term: {
-              _id: id,
+            bool: {
+              must: {
+                term: {
+                  _id: id,
+                },
+              },
             },
           },
         },
-      }).then(({ took, hits }) => {
+      };
+
+      if (i) {
+        query.body.query.bool.filter = {
+          term: {
+            'info.iframe': true,
+          },
+        }
+      }
+      client.search(query).then(({ took, hits }) => {
         res.setHeader('Content-Type', 'application/json');
         res.send(JSON.stringify({
           took,
@@ -55,6 +69,39 @@ module.exports = function (options = {}) {
         if (p > 0) {
           size = 10;
           from = (p - 1) * size;
+        }
+      }
+
+      const query = {
+        index,
+        type,
+        body: {
+          from,
+          size,
+          _source: ['title', 'description', 'url', 'image'],
+          query: {
+            bool: {
+              must: {
+                multi_match: {
+                  query: q,
+                  fields: ['title', 'body'],
+                },
+              },
+              must_not: {
+                terms: {
+                  _id: e,
+                },
+              },
+            },
+          },
+        },
+      };
+
+      if (i) {
+        query.body.query.bool.filter = {
+          term: {
+            'info.iframe': true,
+          },
         }
       }
 
