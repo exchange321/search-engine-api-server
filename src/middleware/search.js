@@ -12,7 +12,7 @@ module.exports = function (options = {}) {
 
     client.ping({
       // ping usually has a 3000ms timeout
-      requestTimeout: 1000
+      requestTimeout: 3000
     }, function (error) {
       if (error) {
         next(new errors.Unavailable('elasticsearch cluster is down!'));
