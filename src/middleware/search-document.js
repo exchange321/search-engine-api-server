@@ -95,6 +95,14 @@ module.exports = function (options = {}) {
               auto_generate_phrase_queries: true,
             },
           },
+          should: {
+            query_string: {
+              query: q,
+              fields: ['title', 'body'],
+              analyzer: 'english',
+              default_operator: 'AND',
+            },
+          },
           must_not: {
             terms: {
               _id: e,
@@ -183,27 +191,32 @@ module.exports = function (options = {}) {
 
         const { hits: { total } } = await client.search(query);
         const median = Math.round(total / 2);
+        const fromMedian = Math.floor(median / 10);
+        let indexMedian = (median & 10) - 1;
+        if (indexMedian < 0) {
+          indexMedian = 9;
+        }
 
         query = {
           index,
           type,
           body: {
-            from: median,
-            size: 1,
+            from: fromMedian,
+            size: 10,
             _source: false,
             query: queryBody,
           },
         };
 
         const { hits: { hits: qsHits } } = await client.search(query);
-        const qsMedian = qsHits[0]._score;
+        const qsMedian = qsHits[indexMedian]._score;
 
         query = {
           index,
           type,
           body: {
-            from: median,
-            size: 1,
+            from: fromMedian,
+            size: 10,
             _source: false,
             query: {
               function_score: {
@@ -217,7 +230,7 @@ module.exports = function (options = {}) {
         };
 
         const { hits: { hits: tsHits } } = await client.search(query);
-        const tsMedian = tsHits[0]._score;
+        const tsMedian = tsHits[indexMedian]._score;
 
         const multiplier = qsMedian / tsMedian;
 

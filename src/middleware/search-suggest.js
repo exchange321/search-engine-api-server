@@ -43,6 +43,10 @@ module.exports = function (options = {}) {
                   suggest_mode: 'popular',
                 },
               ],
+              highlight: {
+                pre_tag: '<b>',
+                post_tag: '</b>',
+              },
             },
           },
         },
@@ -53,7 +57,7 @@ module.exports = function (options = {}) {
       let { options: keyword_options } = keyword_suggest[0];
       keyword_options = keyword_options.map(({ text }) => text);
       let { options: body_options } = body_suggest[0];
-      body_options = body_options.map(({ text }) => text);
+      body_options = body_options.map(({ highlighted }) => highlighted);
       let options = keyword_options.concat(body_options);
       options = options.filter((option, key) => options.indexOf(option) === key);
       options = options.map(option => ({
