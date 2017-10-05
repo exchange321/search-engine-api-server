@@ -2,6 +2,8 @@ const elasticsearch = require('elasticsearch');
 const errors = require('feathers-errors');
 const url = require('url');
 
+const print = message => console.log(JSON.stringify(message, null, 4));
+
 module.exports = function (options = {}) {
   return async function searchDocument(req, res, next) {
     const { host, port, apiVersion, index, type } = options;
@@ -161,13 +163,65 @@ module.exports = function (options = {}) {
 
         Object.keys(weights).forEach(topic => weights[topic] /= sum);
 
-        const functions = Object.keys(weights).map(topic => ({
+        let functions = Object.keys(weights).map(topic => ({
           field_value_factor: {
             field: `categories.${topic}`,
             factor: weights[topic],
             missing: 0,
           }
         }));
+
+        query = {
+          index,
+          type,
+          body: {
+            size: 0,
+            _source: false,
+            query: queryBody,
+          },
+        };
+
+        const { hits: { total } } = await client.search(query);
+        const median = Math.round(total / 2);
+
+        query = {
+          index,
+          type,
+          body: {
+            from: median,
+            size: 1,
+            _source: false,
+            query: queryBody,
+          },
+        };
+
+        const { hits: { hits: qsHits } } = await client.search(query);
+        const qsMedian = qsHits[0]._score;
+
+        query = {
+          index,
+          type,
+          body: {
+            from: median,
+            size: 1,
+            _source: false,
+            query: {
+              function_score: {
+                query: queryBody,
+                functions,
+                score_mode: "sum",
+                boost_mode: "replace",
+              },
+            },
+          },
+        };
+
+        const { hits: { hits: tsHits } } = await client.search(query);
+        const tsMedian = tsHits[0]._score;
+
+        const multiplier = qsMedian / tsMedian;
+
+        functions.forEach(func => func.field_value_factor.factor *= multiplier);
 
         query = {
           index,
@@ -181,7 +235,7 @@ module.exports = function (options = {}) {
                 query: queryBody,
                 functions,
                 score_mode: "sum",
-                boost_mode: "multiply",
+                boost_mode: "sum",
               },
             },
           },
