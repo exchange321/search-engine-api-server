@@ -44,8 +44,8 @@ module.exports = function (options = {}) {
                 },
               ],
               highlight: {
-                pre_tag: '<b>',
-                post_tag: '</b>',
+                pre_tag: '<strong>',
+                post_tag: '</strong>',
               },
             },
           },
