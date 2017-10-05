@@ -98,7 +98,7 @@ module.exports = function (options = {}) {
           should: {
             query_string: {
               query: q,
-              fields: ['title', 'body'],
+              fields: ['title^1.5', 'body'],
               analyzer: 'english',
               default_operator: 'AND',
             },
