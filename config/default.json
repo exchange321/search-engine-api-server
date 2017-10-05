@@ -6,11 +6,11 @@
     "max": 50
   },
   "esConfig": {
-    "host": "ES_HOST",
-    "port": "ES_PORT",
-    "apiVersion": "ES_API",
-    "index": "ES_INDEX",
-    "type": "ES_TYPE",
-    "numTopics": "NUM_TOPICS"
+    "host": "https://search-accese-elastic-search-hy3net5jpdt4a6qnuxpwcdzaku.ap-southeast-2.es.amazonaws.com",
+    "port": "443",
+    "apiVersion": "5.5",
+    "index": "accese",
+    "type": "webpages",
+    "numTopics": "150"
   }
 }

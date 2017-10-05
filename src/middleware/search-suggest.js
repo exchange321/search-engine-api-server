@@ -21,8 +21,16 @@ module.exports = function (options = {}) {
       index,
       type,
       body: {
+        _source: '',
         suggest: {
           text: q,
+          keyword_suggest: {
+            prefix: q,
+            completion: {
+              field: 'keywords',
+              size: 5,
+            },
+          },
           body_suggest: {
             phrase: {
               analyzer: 'standard',
@@ -41,8 +49,16 @@ module.exports = function (options = {}) {
       },
     };
 
-    client.search(query).then(({ took, suggest: { body_suggest } }) => {
-      const { options } = body_suggest[0];
+    client.search(query).then(({ took, suggest: { keyword_suggest, body_suggest } }) => {
+      let { options: keyword_options } = keyword_suggest[0];
+      keyword_options = keyword_options.map(({ text }) => text);
+      let { options: body_options } = body_suggest[0];
+      body_options = body_options.map(({ text }) => text);
+      let options = keyword_options.concat(body_options);
+      options = options.filter((option, key) => options.indexOf(option) === key);
+      options = options.map(option => ({
+        text: option,
+      })).slice(0, 5);
       res.setHeader('Content-Type', 'application/json');
       res.send(JSON.stringify({
         took,
