@@ -90,6 +90,7 @@ module.exports = function (options = {}) {
               query: q,
               fields: ['title', 'body'],
               analyzer: 'english',
+              auto_generate_phrase_queries: true,
             },
           },
           must_not: {
