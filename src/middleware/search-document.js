@@ -86,9 +86,10 @@ module.exports = function (options = {}) {
       const queryBody = {
         bool: {
           must: {
-            multi_match: {
+            query_string: {
               query: q,
               fields: ['title', 'body'],
+              analyzer: 'english',
             },
           },
           must_not: {
