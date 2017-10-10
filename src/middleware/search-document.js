@@ -1,8 +1,46 @@
 const elasticsearch = require('elasticsearch');
 const errors = require('feathers-errors');
+const natural = require('natural');
 const url = require('url');
 
+const wordnet = new natural.WordNet();
+const tokenizer = new natural.WordTokenizer();
+
 const print = message => console.log(JSON.stringify(message, null, 4));
+
+const getExpansions = word => new Promise((resolve) => {
+  wordnet.lookup(word, results => {
+    resolve(results.map((result) => {
+      print({
+        lemma: result.lemma,
+        def: result.def,
+      });
+      return result.synonyms.map(synonym => synonym.toLowerCase().split('_').join(' ').trim());
+    }).reduce((a, b) => a.concat(b), []));
+  });
+});
+
+const expandQuery = async (tokens, level, totalLevel) => {
+  if (totalLevel === undefined) {
+    totalLevel = level;
+  }
+  if (level-- <= 1) {
+    return tokens;
+  }
+  const dictionary = tokens.map(token => token.text);
+  let newTokens = [];
+  for (let token of dictionary) {
+    let results = await getExpansions(token);
+    results = results.filter(result => !dictionary.includes(result)).map(result => ({
+      text: result,
+      weight: +(level / totalLevel / 500).toFixed(4),
+    }));
+    newTokens = [...newTokens, ...results];
+  }
+  newTokens = await expandQuery(newTokens, level, totalLevel);
+  newTokens = newTokens.filter(token => !dictionary.includes(token.text));
+  return [...tokens, ...newTokens]
+};
 
 module.exports = function (options = {}) {
   return async function searchDocument(req, res, next) {
@@ -85,24 +123,52 @@ module.exports = function (options = {}) {
 
       let query = {};
 
+      const rawQuery = q;
+      let expandedQuery = tokenizer.tokenize(q).map(token => ({
+        text: token.toLowerCase(),
+        weight: 1,
+      }));
+
+      expandedQuery = await expandQuery(expandedQuery, 2);
+      expandedQuery = expandedQuery.filter(({ weight }) => weight < 1).map(({ text, weight }) => `"${text}"^${weight}`).join(' ');
+
+      print(expandedQuery);
+
       const queryBody = {
         bool: {
           must: {
-            query_string: {
-              query: q,
+            multi_match: {
+              query: rawQuery,
+              type: 'best_fields',
               fields: ['title', 'body'],
-              analyzer: 'english',
-              auto_generate_phrase_queries: true,
+              zero_terms_query: 'all',
             },
           },
-          should: {
-            query_string: {
-              query: q,
-              fields: ['title^1.5', 'body'],
-              analyzer: 'english',
-              default_operator: 'AND',
+          should: [
+            {
+              multi_match: {
+                query: rawQuery,
+                type: 'best_fields',
+                fields: ['title^1.5', 'body'],
+                zero_terms_query: 'all',
+                operator: 'and',
+              },
             },
-          },
+            // {
+            //   multi_match: {
+            //     query: expandedQuery,
+            //     fields: ['title', 'body'],
+            //     type: 'cross_fields',
+            //     operator: 'or',
+            //   },
+            // },
+            {
+              multi_match: {
+                query: 'service',
+                fields: ['title', 'body'],
+              },
+            },
+          ],
           must_not: {
             terms: {
               _id: e,
