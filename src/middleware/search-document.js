@@ -126,45 +126,29 @@ module.exports = function (options = {}) {
 
       let query = {};
 
-      const rawQuery = q;
-      let expandedQuery = tokenizer.tokenize(q).map(token => ({
-        text: token.toLowerCase(),
-        weight: 1,
-      }));
-
-      expandedQuery = await expandQuery(expandedQuery, 2);
-      expandedQuery = expandedQuery.filter(({ weight }) => weight < 1).map(({ text, weight }) => `"${text}"^${weight}`).join(' ');
-
-      print(expandedQuery);
-
       const queryBody = {
         bool: {
           must: {
             multi_match: {
-              query: rawQuery,
+              query: q,
               type: 'best_fields',
               fields: ['title', 'body'],
-              zero_terms_query: 'all',
             },
           },
           should: [
             {
               multi_match: {
-                query: rawQuery,
-                type: 'best_fields',
+                query: q,
+                type: 'phrase',
                 fields: ['title^1.5', 'body'],
-                zero_terms_query: 'all',
-                operator: 'and',
               },
             },
-            // {
-            //   multi_match: {
-            //     query: expandedQuery,
-            //     fields: ['title', 'body'],
-            //     type: 'cross_fields',
-            //     operator: 'or',
-            //   },
-            // },
+            {
+              match: {
+                keywords: q,
+                boost: 1.2,
+              },
+            },
             {
               multi_match: {
                 query: 'service',
