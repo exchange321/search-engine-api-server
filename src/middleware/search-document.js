@@ -44,6 +44,8 @@ const expandQuery = async (tokens, level, totalLevel) => {
 
 module.exports = function (options = {}) {
   return async function searchDocument(req, res, next) {
+    const startTime = new Date();
+
     const { host, port, apiVersion, index, type } = options;
     const numTopics = parseInt(options.numTopics);
 
@@ -82,10 +84,11 @@ module.exports = function (options = {}) {
           },
         }
       }
-      client.search(query).then(({ took, hits }) => {
+      client.search(query).then(({  hits }) => {
+        const endTime = new Date();
         res.setHeader('Content-Type', 'application/json');
         res.send(JSON.stringify({
-          took,
+          took: endTime - startTime,
           hits,
         }));
       }).catch((err) => {
@@ -332,10 +335,11 @@ module.exports = function (options = {}) {
         };
       }
 
-      client.search(query).then(({ took, hits }) => {
+      client.search(query).then(({ hits }) => {
+        const endTime = new Date();
         res.setHeader('Content-Type', 'application/json');
         res.send(JSON.stringify({
-          took,
+          took: endTime - startTime,
           hits,
         }));
       }).catch((err) => {
