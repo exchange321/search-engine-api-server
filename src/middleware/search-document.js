@@ -140,13 +140,12 @@ module.exports = function (options = {}) {
               multi_match: {
                 query: q,
                 type: 'phrase',
-                fields: ['title^1.5', 'body'],
+                fields: ['title', 'body'],
               },
             },
             {
               match: {
                 keywords: q,
-                boost: 1.2,
               },
             },
             {
