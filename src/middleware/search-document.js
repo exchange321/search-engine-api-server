@@ -231,44 +231,77 @@ module.exports = function (options = {}) {
           }
         }));
 
-        query = {
-          index,
-          type,
-          body: {
-            size: 0,
-            _source: false,
-            query: queryBody,
-          },
-        };
+        // query = {
+        //   index,
+        //   type,
+        //   body: {
+        //     size: 0,
+        //     _source: false,
+        //     query: queryBody,
+        //   },
+        // };
+        //
+        // const { hits: { total } } = await client.search(query);
+        // const median = Math.round(total / 2);
+        // const fromMedian = Math.floor(median / 10);
+        // let indexMedian = (median & 10) - 1;
+        // if (indexMedian < 0) {
+        //   indexMedian = 9;
+        // }
+        //
+        // query = {
+        //   index,
+        //   type,
+        //   body: {
+        //     from: fromMedian,
+        //     size: 10,
+        //     _source: false,
+        //     query: queryBody,
+        //   },
+        // };
+        //
+        // const { hits: { hits: qsHits } } = await client.search(query);
+        // const qsMedian = qsHits[indexMedian]._score;
+        //
+        // query = {
+        //   index,
+        //   type,
+        //   body: {
+        //     from: fromMedian,
+        //     size: 10,
+        //     _source: false,
+        //     query: {
+        //       function_score: {
+        //         query: queryBody,
+        //         functions,
+        //         score_mode: "sum",
+        //         boost_mode: "replace",
+        //       },
+        //     },
+        //   },
+        // };
+        //
+        // const { hits: { hits: tsHits } } = await client.search(query);
+        // const tsMedian = tsHits[indexMedian]._score;
 
-        const { hits: { total } } = await client.search(query);
-        const median = Math.round(total / 2);
-        const fromMedian = Math.floor(median / 10);
-        let indexMedian = (median & 10) - 1;
-        if (indexMedian < 0) {
-          indexMedian = 9;
-        }
-
         query = {
-          index,
-          type,
-          body: {
-            from: fromMedian,
-            size: 10,
-            _source: false,
-            query: queryBody,
-          },
+            index,
+            type,
+            body: {
+              size: 1,
+              _source: false,
+              query: queryBody,
+            },
         };
 
         const { hits: { hits: qsHits } } = await client.search(query);
-        const qsMedian = qsHits[indexMedian]._score;
+        const qsMax = qsHits[0]._score;
 
         query = {
           index,
           type,
           body: {
-            from: fromMedian,
-            size: 10,
+            size: 1,
             _source: false,
             query: {
               function_score: {
@@ -282,9 +315,10 @@ module.exports = function (options = {}) {
         };
 
         const { hits: { hits: tsHits } } = await client.search(query);
-        const tsMedian = tsHits[indexMedian]._score;
+        const tsMax = tsHits[0]._score;
 
-        const multiplier = qsMedian / tsMedian;
+        // const multiplier = qsMedian / tsMedian;
+        const multiplier = qsMax / tsMax;
 
         functions.forEach(func => func.field_value_factor.factor *= multiplier);
 
