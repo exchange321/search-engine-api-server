@@ -27,7 +27,7 @@ module.exports = function (options = {}) {
           keyword_suggest: {
             prefix: q,
             completion: {
-              field: 'keywords',
+              field: 'completions',
               size: 5,
             },
           },
