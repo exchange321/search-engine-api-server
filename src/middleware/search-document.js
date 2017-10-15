@@ -152,7 +152,7 @@ module.exports = function (options = {}) {
             },
             {
               multi_match: {
-                query: 'service',
+                query: 'disability service',
                 fields: ['title', 'body'],
               },
             },
