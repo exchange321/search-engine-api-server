@@ -133,8 +133,7 @@ module.exports = function (options = {}) {
               query: q,
               type: 'best_fields',
               fields: ['title', 'body'],
-              cutoff_frequency: 0.001,
-              minimum_should_match: '3<75%',
+              cutoff_frequency: 0.001
             },
           },
           should: [
