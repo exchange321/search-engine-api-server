@@ -356,6 +356,7 @@ module.exports = function (options = {}) {
         const endTime = new Date();
         res.setHeader('Content-Type', 'application/json');
         res.send(JSON.stringify({
+          query: q,
           took: endTime - startTime,
           hits,
         }));
